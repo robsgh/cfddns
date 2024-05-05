@@ -4,16 +4,16 @@ A tool for updating Cloudflare DNS A records for a particular zone to the public
 
 ## Usage
 
-`./cfddns --api-token <api token> [DNS ZONE ID] [DNS A RECORD NAME]`
-
-Alternatively, the API token can be specified with the `API_TOKEN` environment variable instead of as an argument.
+`./cfddns`
 
 ## Installation
 
 To install cfddns:
 
 1. `cargo build -r`
-2. `cp ./target/release/cfddns /usr/bin/cfddns`
-3. ```mkdir /etc/cfddns && echo "API_TOKEN=<put your token here" >/etc/cfddns/config && chmod 600 /etc/cfddns/config```
-4. `cp ./systemd/* /etc/systemd/system/`
-5. `sudo systemctl daemon-reload && sudo systemctl enable --now cfddns.timer`
+2. `sudo cp ./target/release/cfddns /usr/bin/cfddns`
+3. `cp ./config/example.json ./config/config.json`
+4. Update the placeholder values in the config at `./config/config.json` as directed
+5. `sudo mkdir /etc/cfddns && sudo cp ./config/config.json /etc/cfddns/config.json && sudo chmod 600 /etc/cfddns/config.json`
+6. `sudo cp ./systemd/* /etc/systemd/system/`
+7. `sudo systemctl daemon-reload && sudo systemctl enable --now cfddns.timer`

@@ -3,10 +3,7 @@ Description=Update a cloudflare DNS A record to this host's public IP address
 After=network-online.target
 
 [Service]
-Type=oneshot
 ExecStart=/usr/bin/cfddns
-RemainAfterExit=yes
-EnvironmentFile=/etc/cfddns/config
 
 [Install]
 WantedBy=multi-user.target
