@@ -1,0 +1,9 @@
+[Unit]
+Description=Run cfddns every hour to keep the DNS record up to date
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
