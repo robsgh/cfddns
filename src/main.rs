@@ -88,7 +88,7 @@ async fn main() -> anyhow::Result<()> {
 
     // compare IPs and update if needed
     if current_ip == cf_ip {
-        info!("Nothing to do: cloudflare IP is the same as current IP");
+        info!("nothing to do: cloudflare IP is the same as current IP");
         return Ok(());
     }
 
