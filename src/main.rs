@@ -24,11 +24,9 @@ struct Args {
     api_token: String,
 
     /// Cloudflare DNS Zone ID
-    #[arg(short, long)]
     zone_id: String,
 
     /// DNS record name to update
-    #[arg(short, long)]
     record_name: String,
 
     /// Log level verbosity
