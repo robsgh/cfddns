@@ -1,6 +1,6 @@
 use std::net::Ipv4Addr;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Context, Result};
 use cloudflare::{
     endpoints::dns::{
         DnsContent, DnsRecord, ListDnsRecords, ListDnsRecordsParams, UpdateDnsRecord,
@@ -8,7 +8,10 @@ use cloudflare::{
     },
     framework::async_api::Client,
 };
-use tracing::{debug, error, info, instrument, warn};
+use config::CfddnsConfig;
+use tracing::{debug, info, instrument, warn};
+
+pub mod config;
 
 /// Request the records from cloudflare
 async fn request_records(client: &Client, zone_id: &str) -> Result<Vec<DnsRecord>> {
@@ -42,13 +45,16 @@ fn find_matching_dns_record(records: Vec<DnsRecord>, name: &str) -> Option<DnsRe
             "found matching DNS record"
         );
 
-        if let DnsContent::A { content: _ } = record.content {
-            return Some(record);
-        } else {
-            warn!(
-                record_content = ?record.content,
-                "found a matching DNS record that cannot be used because of its type",
-            );
+        match record.content {
+            DnsContent::A { content: _ } => {
+                return Some(record);
+            }
+            _ => {
+                warn!(
+                    record_content = ?record.content,
+                    "a matching DNS record was found that cannot be used because of its type",
+                );
+            }
         }
     }
 
@@ -59,19 +65,18 @@ fn find_matching_dns_record(records: Vec<DnsRecord>, name: &str) -> Option<DnsRe
 #[instrument(skip(client))]
 pub async fn fetch_cloudflare_dns_record(
     client: &Client,
-    zone_id: &str,
-    name: &str,
+    config: &CfddnsConfig,
 ) -> Result<DnsRecord> {
-    let dns_records = request_records(client, zone_id).await?;
+    let dns_records = request_records(client, &config.zone_id).await?;
 
-    match find_matching_dns_record(dns_records, name) {
+    match find_matching_dns_record(dns_records, &config.record_name) {
         Some(record) => Ok(record),
         None => {
-            error!(
+            anyhow::bail!(
                 "no matching DNS A record with name {:?} was found for zone {:?}",
-                name, zone_id
-            );
-            anyhow::bail!("failed to fetch DNS record from cloudflare")
+                config.record_name,
+                config.zone_id
+            )
         }
     }
 }
@@ -82,7 +87,7 @@ pub async fn update_cloudflare_dns_record(
     client: &Client,
     record: DnsRecord,
     new_ip: Ipv4Addr,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<Ipv4Addr> {
     let dns_req = UpdateDnsRecord {
         zone_identifier: &record.zone_id,
         identifier: &record.id,
@@ -95,21 +100,21 @@ pub async fn update_cloudflare_dns_record(
     };
 
     let resp = client.request(&dns_req).await?.result;
-    if let DnsContent::A { content } = resp.content {
-        if content == new_ip {
+    debug!(?resp, "received DNS update response");
+
+    match resp.content {
+        DnsContent::A { content } => {
+            if content != new_ip {
+                anyhow::bail!("DNS record update requested but IP did not change");
+            }
+
             info!(cloudflare_ip = ?content, "updated cloudflare DNS");
-            return Ok(());
-        } else {
-            error!("DNS update request succeeded but the record has not been updated");
-            anyhow::bail!("DNS record was not updated");
+            return Ok(content);
+        }
+        _ => {
+            anyhow::bail!("failed to process returned cloudflare DNS record");
         }
     }
-
-    error!(
-        response_record = ?resp,
-        "failed to process cloudflare DNS record"
-    );
-    anyhow::bail!("failed to process returned cloudflare DNS record");
 }
 
 /// Fetch an IP by querying the API endpoint at ipify.org
@@ -120,7 +125,7 @@ pub async fn fetch_current_ip() -> Result<Ipv4Addr> {
         .text()
         .await?
         .parse()
-        .map_err(|e| anyhow!("failed to parse IP from ipify: {e:?}"))?;
+        .context("failed to parse IP from ipify")?;
 
     info!(current_ip = ?ip, "fetched current public IP");
     Ok(ip)

@@ -1,0 +1,5 @@
+{
+    "api_token": "<your cloudflare token here>",
+    "zone_id": "<zone ID of your DNS zone>",
+    "record_name": "<name of the DNS A record to validate/update>"
+}
