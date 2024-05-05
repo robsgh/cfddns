@@ -62,7 +62,7 @@ fn find_matching_dns_record(records: Vec<DnsRecord>, name: &str) -> Option<DnsRe
 }
 
 /// Fetch a DNS record using the Cloudflare API
-#[instrument(skip(client))]
+#[instrument(skip(client, config))]
 pub async fn fetch_cloudflare_dns_record(
     client: &Client,
     config: &CfddnsConfig,
@@ -82,7 +82,7 @@ pub async fn fetch_cloudflare_dns_record(
 }
 
 /// Update the cloudflare DNS record with a new IP
-#[instrument(skip(client, new_ip))]
+#[instrument(skip(client, record))]
 pub async fn update_cloudflare_dns_record(
     client: &Client,
     record: DnsRecord,
