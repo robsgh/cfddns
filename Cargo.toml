@@ -1,6 +1,14 @@
 [package]
 name = "cfddns"
 version = "0.1.0"
+authors = ["Rob Schmidt <rwschmidt26@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "A pseudo-DDNS tool for Cloudflare DNS"
+readme = "README.md"
+homepage = "https://github.com/robsgh/cfddns"
+repository = "https://github.com/robsgh/cfddns"
+keywords = ["cfddns", "cloudflare", "ddns", "dynamic ddns"]
+categories = ["command-line-utilities"]
 edition = "2021"
 
 [dependencies]
