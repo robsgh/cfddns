@@ -20,7 +20,7 @@ use tracing_log::AsTrace;
 #[command(version, about)]
 struct Args {
     /// Cloudflare API token
-    #[arg(short, long)]
+    #[arg(short, long, env)]
     api_token: String,
 
     /// Cloudflare DNS Zone ID
