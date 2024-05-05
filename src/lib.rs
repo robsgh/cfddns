@@ -23,7 +23,7 @@ async fn request_records(client: &Client, zone_id: &str) -> Result<Vec<DnsRecord
         .await?
         .result;
 
-    debug!(
+    info!(
         record.names = ?results
             .iter()
             .map(|r| r.name.clone())
@@ -37,7 +37,7 @@ async fn request_records(client: &Client, zone_id: &str) -> Result<Vec<DnsRecord
 /// Find a matching DNS record with `name` from a vec of DnsRecords
 fn find_matching_dns_record(records: Vec<DnsRecord>, name: &str) -> Option<DnsRecord> {
     if let Some(record) = records.into_iter().find(|r| r.name == name) {
-        debug!(
+        info!(
             record.name,
             ?record.created_on,
             ?record.modified_on,
@@ -52,7 +52,7 @@ fn find_matching_dns_record(records: Vec<DnsRecord>, name: &str) -> Option<DnsRe
             _ => {
                 warn!(
                     record_content = ?record.content,
-                    "a matching DNS record was found that cannot be used because of its type",
+                    "matching DNS record was found but cannot be used because of its type",
                 );
             }
         }
